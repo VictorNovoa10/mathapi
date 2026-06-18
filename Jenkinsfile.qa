@@ -37,20 +37,16 @@ pipeline {
     }
 
     stage('Dependency Check') {
-      steps {
-        sh '''
-          rm -rf dependency-check-report
-          mkdir -p dependency-check-report
-          dependency-check \
-            --project "mathapi-qa" \
-            --scan . \
-            --format "HTML" \
-            --format "XML" \
-            --out dependency-check-report \
-            --failOnCVSS 11
-        '''
-      }
-    }
+            steps {
+                withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_KEY')]) {
+                    sh '''
+                    rm -rf dependency-check-report
+                    mkdir -p dependency-check-report
+                    dependency-check --project mathapi-qa --scan . --format HTML --format XML --out dependency-check-report --failOnCVSS 11 --nvdApiKey $NVD_KEY
+                    '''
+                }
+            }
+        }
 
     stage('SonarQube Analysis') {
       steps {
