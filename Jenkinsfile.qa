@@ -42,7 +42,7 @@ pipeline {
                     sh '''
                     rm -rf dependency-check-report
                     mkdir -p dependency-check-report
-                    dependency-check --project mathapi-qa --scan . --format HTML --format XML --out dependency-check-report --failOnCVSS 11 --nvdApiKey $NVD_KEY
+                    dependency-check --project mathapi-qa --scan . --format HTML --format XML --out dependency-check-report --failOnCVSS 11 --nvdApiKey $NVD_KEY --nvdApiDelay 10000
                     '''
                 }
             }
