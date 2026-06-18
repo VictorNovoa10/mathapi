@@ -36,16 +36,16 @@ pipeline {
       }
     }
 
-stage('Docker Build') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB_CREDENTIALS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker compose build
-                    '''
-                }
-            }
-        }
+    stage('Dependency Check') {
+      steps {
+        sh '''
+        rm -rf dependency-check-report
+        mkdir -p dependency-check-report
+        dependency-check --project mathapi-qa --scan . --format HTML --format XML --out dependency-check-report --failOnCVSS 11 -n --disableYarnAudit
+        '''
+      }
+    }
+
     stage('SonarQube Analysis') {
       steps {
         withSonarQubeEnv(env.SONARQUBE_ENV) {
@@ -71,7 +71,12 @@ stage('Docker Build') {
 
     stage('Docker Build') {
       steps {
-        sh 'docker compose build'
+        withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB_CREDENTIALS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh '''
+          echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+          docker compose build
+          '''
+        }
       }
     }
 
@@ -91,6 +96,10 @@ stage('Docker Build') {
 
   post {
     always {
+      archiveArtifacts artifacts: 'coverage/**,dependency-check-report/**', allowEmptyArchive: true
+    }
+  }
+}
       archiveArtifacts artifacts: 'coverage/**,dependency-check-report/**', allowEmptyArchive: true
     }
   }
