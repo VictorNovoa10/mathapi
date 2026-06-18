@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "src/app.js",
   "scripts": {
+    "start": "node src/app.js",
     "test": "jest",
-    "start": "node src/app.js"
+    "test:coverage": "jest --coverage --runInBand"
   },
   "dependencies": {
     "express": "^4.18.2"

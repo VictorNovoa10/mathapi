@@ -1,0 +1,103 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+  }
+
+  parameters {
+    string(name: 'GIT_REPO_URL', defaultValue: 'https://github.com/TU_USUARIO/mathapi.git', description: 'Fork publico del repositorio mathapi')
+  }
+
+  environment {
+    APP_HOST_PORT = '3000'
+    COMPOSE_PROJECT_NAME = 'mathapi_prod'
+    SONARQUBE_ENV = 'SonarQube'
+    SONAR_TOKEN_CREDENTIAL_ID = 'sonarqube-token'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        deleteDir()
+        git branch: 'main', url: params.GIT_REPO_URL
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'npm install'
+      }
+    }
+
+    stage('Tests') {
+      steps {
+        sh 'npm test -- --coverage --runInBand'
+      }
+    }
+
+    stage('Dependency Check') {
+      steps {
+        sh '''
+          rm -rf dependency-check-report
+          mkdir -p dependency-check-report
+          dependency-check \
+            --project "mathapi-prod" \
+            --scan . \
+            --format "HTML" \
+            --format "XML" \
+            --out dependency-check-report \
+            --failOnCVSS 11
+        '''
+      }
+    }
+
+    stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv(env.SONARQUBE_ENV) {
+          withCredentials([string(credentialsId: env.SONAR_TOKEN_CREDENTIAL_ID, variable: 'SONAR_TOKEN')]) {
+            sh '''
+              sonar-scanner \
+                -Dsonar.host.url=$SONAR_HOST_URL \
+                -Dsonar.token=$SONAR_TOKEN
+            '''
+          }
+        }
+        timeout(time: 5, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
+
+    stage('Clean Up') {
+      steps {
+        sh 'docker compose down --remove-orphans || true'
+      }
+    }
+
+    stage('Docker Build') {
+      steps {
+        sh 'docker compose build'
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        sh 'docker compose up -d'
+      }
+    }
+
+    stage('Logs') {
+      steps {
+        sh 'docker compose ps'
+        sh 'docker compose logs --tail=100 mathapi'
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'coverage/**,dependency-check-report/**', allowEmptyArchive: true
+    }
+  }
+}

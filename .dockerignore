@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+coverage
+dependency-check-report
+.git
+.gitignore
+Jenkinsfile.*
+README.md
+sonar-project.properties

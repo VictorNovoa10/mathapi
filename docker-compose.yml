@@ -1,0 +1,18 @@
+services:
+  mathapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${APP_IMAGE_NAME:-mathapi:latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "${APP_HOST_PORT:-3000}:3000"
+    networks:
+      - mathapi-net
+
+networks:
+  mathapi-net:
+    driver: bridge

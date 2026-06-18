@@ -15,13 +15,15 @@ exports.multiply = (req, res) => {
 
 exports.divide = (req, res) => {
   const { a, b } = req.body;
+
   if (b === 0) {
     return res.status(400).json({ error: 'Cannot divide by zero' });
   }
-  res.json({ result: a / b });
+
+  return res.json({ result: a / b });
 };
 
 exports.pow = (req, res) => {
   const { a, b } = req.body;
-  res.json({ result: Math.pow(a,b) });
+  res.json({ result: Math.pow(a, b) });
 };
