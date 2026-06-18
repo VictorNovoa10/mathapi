@@ -6,7 +6,7 @@ pipeline {
   }
 
   parameters {
-    string(name: 'GIT_REPO_URL', defaultValue: 'https://github.com/TU_USUARIO/mathapi.git', description: 'Fork publico del repositorio mathapi')
+    string(name: 'GIT_REPO_URL', defaultValue: 'https://github.com/VictorNovoa10/mathapi.git', description: 'Fork publico del repositorio mathapi')
   }
 
   environment {
