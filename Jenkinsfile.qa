@@ -36,13 +36,14 @@ pipeline {
       }
     }
 
-    stage('Dependency Check') {
+    stage('Docker Build') {
             steps {
-                sh '''
-                rm -rf dependency-check-report
-                mkdir -p dependency-check-report
-                dependency-check --project mathapi-qa --scan . --format HTML --format XML --out dependency-check-report --failOnCVSS 11 -n --disableYarnAudit
-                '''
+                withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB_CREDENTIALS', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker compose build
+                    '''
+                }
             }
         }
     stage('SonarQube Analysis') {
